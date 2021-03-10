@@ -44,12 +44,6 @@ jobs:
         echo Clean Version: $VERSION
         dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$VERSION-timbze src/Blazored.$PROJECT_NAME/Blazored.$PROJECT_NAME.*proj
 
-    - name: Rewrite base href
-      uses: SteveSandersonMS/ghaction-rewrite-base-href@v1
-      with:
-        html_path: samples/BlazorWebAssembly/bin/Release/netstandard2.1/publish/BlazorWebAssembly/dist/index.html
-        base_href: /${{ env.PROJECT_NAME }}/
-    
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
