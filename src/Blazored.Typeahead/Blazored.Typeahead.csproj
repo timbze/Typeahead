@@ -16,10 +16,10 @@
     <PackageId>Blazored.Typeahead</PackageId>
     <PackageTags>Blazored;Blazor;Razor;Components;Typeahead;Autocomplete;Auto Complete;ASP.NET Core;CSharp;Web</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/Blazored/Typeahead</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/timbze/Typeahead</PackageProjectUrl>
     <PackageIcon>icon.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/Blazored/Typeahead</RepositoryUrl>
+    <RepositoryUrl>https://github.com/timbze/Typeahead</RepositoryUrl>
 
     <!-- SourceLink settings -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
