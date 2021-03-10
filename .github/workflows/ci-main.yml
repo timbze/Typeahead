@@ -35,8 +35,14 @@ jobs:
     - name: Test
       run: dotnet test -c Release
 
-    - name: Pack
-      run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$GITHUB_RUN_ID src/Blazored.$PROJECT_NAME/Blazored.$PROJECT_NAME.*proj
+    - name: Create Nuget Package
+      run: |
+        arrTag=(${GITHUB_REF//\// })
+        VERSION="${arrTag[2]}"
+        echo Version: $VERSION
+        VERSION="${VERSION//release-}"
+        echo Clean Version: $VERSION
+        dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$VERSION-timbze src/Blazored.$PROJECT_NAME/Blazored.$PROJECT_NAME.*proj
 
     - name: Rewrite base href
       uses: SteveSandersonMS/ghaction-rewrite-base-href@v1
