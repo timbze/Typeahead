@@ -10,7 +10,6 @@ env:
     DOTNET_CLI_TELEMETRY_OPTOUT: true
     PROJECT_NAME: Typeahead
     GITHUB_FEED: https://nuget.pkg.github.com/timbze/index.json
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   build:
@@ -44,5 +43,5 @@ jobs:
         dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$VERSION-timbze src/Blazored.$PROJECT_NAME/Blazored.$PROJECT_NAME.*proj
         for f in ./src/Blazored.${{ env.PROJECT_NAME }}/bin/Release/*.nupkg
         do
-          dotnet nuget push $f --source $GITHUB_FEED --api-key $GITHUB_TOKEN --skip-duplicate
+          dotnet nuget push $f --source $GITHUB_FEED --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
         done
