@@ -8,6 +8,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Timers;
+using Blazored.Typeahead.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace Blazored.Typeahead
 {
@@ -22,6 +24,7 @@ namespace Blazored.Typeahead
         private ElementReference _mask;
 
         [Inject] private IJSRuntime JSRuntime { get; set; }
+        private ILogger Logger { get; set; } = LogSetupStatic.Logger;
 
         [CascadingParameter] private EditContext CascadedEditContext { get; set; }
 
@@ -397,6 +400,7 @@ namespace Blazored.Typeahead
 
         private async Task SelectResult(TItem item)
         {
+            Logger?.LogDebug($"Item is {(item != null ? "not " : "")}null");
             var value = ConvertMethod(item);
        
             if (IsMultiselect)
