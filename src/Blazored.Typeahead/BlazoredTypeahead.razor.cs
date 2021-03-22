@@ -223,7 +223,6 @@ namespace Blazored.Typeahead
             switch (args.Key)
             {
                 case "Tab":
-                    break; // Don't do anything on tab.
                 case "Enter":
                 case "Backspace":
                 case "Delete":
@@ -246,7 +245,7 @@ namespace Blazored.Typeahead
 
             if (args.Key == "Tab")
             {
-                await ResetControl();
+                // await ResetControl();
             }
             
         }
@@ -258,6 +257,7 @@ namespace Blazored.Typeahead
                 await ShowMaximumSuggestions();
             }
 
+            var submitKeys = new List<string> {"Enter", "Tab"};
             if (args.Key == "ArrowDown")
             {
                 MoveSelection(1);
@@ -278,7 +278,7 @@ namespace Blazored.Typeahead
             {
                 await SelectNotFoundPlaceholder();
             }
-            else if (args.Key == "Enter" && SelectedIndex >= 0 && SelectedIndex < Suggestions.Count())
+            else if (submitKeys.Contains(args.Key) && SelectedIndex >= 0 && SelectedIndex < Suggestions.Count())
             {
                 await SelectResult(Suggestions[SelectedIndex]);
             }
