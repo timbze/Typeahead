@@ -230,8 +230,6 @@ namespace Blazored.Typeahead
                 case "Escape":
                     await HandleClear();
                     break;
-                default:
-                    break;
             }
 
             // You can only start searching if it's not a special key (Tab, Enter, Escape, ...)
@@ -246,7 +244,6 @@ namespace Blazored.Typeahead
         private async Task HandleKeydown(KeyboardEventArgs args)
         {
 
-            Console.WriteLine("key: " + args.Key);
             if (args.Key == "Tab")
             {
                 await ResetControl();
