@@ -29,22 +29,51 @@ namespace Blazored.Typeahead
 
         [CascadingParameter] private EditContext CascadedEditContext { get; set; }
 
-        [Parameter] public TValue Value { get; set; }
+        [Parameter]
+        public TValue Value
+        {
+            get => _value;
+            set
+            {
+                if (value != null && value.Equals(_value)) return;
+                if (ValueConverter != null && value != null)
+                    SelectedItem = ValueConverter.ConvertValueToItem(value);
+                else
+                    SelectedItem = default;
+                
+                _value = value;
+            }
+        }
+
         [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
         [Parameter] public Expression<Func<TValue>> ValueExpression { get; set; }
 
-        [Parameter] public IList<TValue> Values { get; set; }
+        [Parameter]
+        public IList<TValue> Values
+        {
+            get => _values;
+            set
+            {
+                if (ValueConverter != null && value != null && value.Any())
+                    SelectedItems = value.Select(i => ValueConverter.ConvertValueToItem(i)).ToList();
+                else
+                    SelectedItems = new List<TItem>();
+                
+                _values = value;
+            }
+        }
+
         [Parameter] public EventCallback<IList<TValue>> ValuesChanged { get; set; }
         [Parameter] public Expression<Func<IList<TValue>>> ValuesExpression { get; set; }
 
         [Parameter] public Func<string, Task<IEnumerable<TItem>>> SearchMethod { get; set; }
-        [Parameter] public Func<TItem, TValue> ConvertMethod { get; set; }
+        [Parameter] public ITypeaheadValueConverter<TItem, TValue> ValueConverter { get; set; }
         [Parameter] public Func<string, Task<TItem>> AddItemOnEmptyResultMethod { get; set; }
 
         [Parameter] public RenderFragment<string> NotFoundTemplate { get; set; }
         [Parameter] public RenderFragment HelpTemplate { get; set; }
         [Parameter] public RenderFragment<TItem> ResultTemplate { get; set; }
-        [Parameter] public RenderFragment<TValue> SelectedTemplate { get; set; }
+        [Parameter] public RenderFragment<TItem> SelectedTemplate { get; set; }
         [Parameter] public RenderFragment HeaderTemplate { get; set; }
         [Parameter] public RenderFragment FooterTemplate { get; set; }
 
@@ -60,6 +89,8 @@ namespace Blazored.Typeahead
         [Parameter] public bool StopPropagation { get; set; } = false;
         [Parameter] public bool PreventDefault { get; set; } = false;
 
+        private TItem SelectedItem { get; set; }
+        private IList<TItem> SelectedItems { get; set; }
         private bool IsSearching { get; set; } = false;
         private bool IsShowingSuggestions { get; set; } = false;
         private bool IsShowingMask { get; set; } = false;
@@ -96,14 +127,14 @@ namespace Blazored.Typeahead
                 throw new InvalidOperationException($"{GetType()} requires a {nameof(SearchMethod)} parameter.");
             }
 
-            if (ConvertMethod == null)
+            if (ValueConverter == null)
             {
                 if (typeof(TItem) != typeof(TValue))
                 {
-                    throw new InvalidOperationException($"{GetType()} requires a {nameof(ConvertMethod)} parameter.");
+                    throw new InvalidOperationException($"{GetType()} requires a {nameof(ValueConverter)} parameter.");
                 }
 
-                ConvertMethod = item => item is TValue value ? value : default;
+                ValueConverter = new DefaultTypeaheadConverter<TItem, TValue>();
             }
 
             if (SelectedTemplate == null)
@@ -148,16 +179,17 @@ namespace Blazored.Typeahead
             IsShowingMask = Value != null;
         }
 
-        private async Task RemoveValue(TValue item)
+        private async Task RemoveItem(TItem item)
         {
             var valueList = Values ?? new List<TValue>();
-            if (valueList.Contains(item))
+            var value = ValueConverter.ConvertItemToValue(item);
+            if (valueList.Contains(value))
             {
-                valueList.Remove(item);
+                valueList.Remove(value);
+                
+                await ValuesChanged.InvokeAsync(valueList);
+                _editContext?.NotifyFieldChanged(_fieldIdentifier);
             }
-
-            await ValuesChanged.InvokeAsync(valueList);
-            _editContext?.NotifyFieldChanged(_fieldIdentifier);
         }
 
         private async Task HandleClear()
@@ -166,13 +198,9 @@ namespace Blazored.Typeahead
             IsShowingMask = false;
 
             if (IsMultiselect)
-            {
                 await ValuesChanged.InvokeAsync(new List<TValue>());
-            }
             else
-            {
                 await ValueChanged.InvokeAsync(default);
-            }
 
             _editContext?.NotifyFieldChanged(_fieldIdentifier);
 
@@ -284,8 +312,8 @@ namespace Blazored.Typeahead
             }
             else if (IsMultiselect && !IsShowingSuggestions && args.Key == "Backspace")
             {
-                if (Values.Any())
-                    await RemoveValue(Values.Last());
+                if (SelectedItems.Any())
+                    await RemoveItem(SelectedItems.Last());
             }
         }
 
@@ -298,6 +326,9 @@ namespace Blazored.Typeahead
         }
 
         private bool _resettingControl = false;
+        private TValue _value;
+        private IList<TValue> _values;
+
         private async Task ResetControl()
         {
             if (!_resettingControl)
@@ -355,7 +386,7 @@ namespace Blazored.Typeahead
         private string GetSelectedSuggestionClass(TItem item, int index)
         {
             const string resultClass = "blazored-typeahead__active-item";
-            TValue value = ConvertMethod(item);
+            var value = ValueConverter.ConvertItemToValue(item);
 
             if (Equals(value, Value) || (Values?.Contains(value) ?? false))
             {
@@ -411,11 +442,11 @@ namespace Blazored.Typeahead
         private async Task SelectResult(TItem item)
         {
             Logger?.LogDebug($"Item is {(item != null ? "not " : "")}null");
-            var value = ConvertMethod(item);
        
             if (IsMultiselect)
             {
                 var valueList = Values ?? new List<TValue>();
+                var value = ValueConverter.ConvertItemToValue(item);
 
                 if (valueList.Contains(value))
                     valueList.Remove(value);
@@ -426,13 +457,12 @@ namespace Blazored.Typeahead
             }
             else
             {
+                var value = ValueConverter.ConvertItemToValue(item);
                 if (Value != null && Value.Equals(value)) return;
-                Value = value;
                 await ValueChanged.InvokeAsync(value);
             }
 
             _editContext?.NotifyFieldChanged(_fieldIdentifier);
-
             Initialize();
         }
 
@@ -441,13 +471,12 @@ namespace Blazored.Typeahead
             Debug.Assert(AddItemOnEmptyResultMethod != null);
             try
             {
-                // Potentially dangerous code
                 var item = await AddItemOnEmptyResultMethod(SearchText);
                 await SelectResult(item);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Logger.LogError(e, "Error adding new item");
             }
         }
 

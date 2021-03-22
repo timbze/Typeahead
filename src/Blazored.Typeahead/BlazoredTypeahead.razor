@@ -12,9 +12,9 @@
             <div class="blazored-typeahead__input-mask-wrapper blazored-typeahead__input-mask-wrapper--disabled">
                 @if (IsMultiselect)
                 {
-                    @if (Values != null)
+                    @if (SelectedItems != null)
                     {
-                        @foreach (var value in Values)
+                        @foreach (var value in SelectedItems)
                         {
                             <div class="blazored-typeahead__multi-value">
                                 <div class="blazored-typeahead__multi-value-label">
@@ -26,10 +26,10 @@
                 }
                 else
                 {
-                    if (Value != null)
+                    if (SelectedItem != null)
                     {
                         <div class="blazored-typeahead__input-mask" tabindex="0">
-                            @SelectedTemplate(Value)
+                            @SelectedTemplate(SelectedItem)
                         </div>
                     }
                 }
@@ -52,9 +52,9 @@
             @if (IsMultiselect)
             {
                 <div class="blazored-typeahead__input-multiselect-wrapper">
-                    @if (Values != null)
+                    @if (SelectedItems != null)
                     {
-                        @foreach (var value in Values)
+                        @foreach (var value in SelectedItems)
                         {
                             <div class="blazored-typeahead__multi-value">
                                 <div class="blazored-typeahead__multi-value-label">
@@ -64,7 +64,7 @@
                                         class="blazored-typeahead__multi-value-clear"
                                         title="Remove Item"
                                         tabindex="-1"
-                                        @onclick="@(() => RemoveValue(value))">
+                                        @onclick="@(() => RemoveItem(value))">
                                     <svg height="14" width="14" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
                                         <path d="M14.348 14.849c-0.469 0.469-1.229 0.469-1.697 0l-2.651-3.030-2.651 3.029c-0.469 0.469-1.229 0.469-1.697 0-0.469-0.469-0.469-1.229 0-1.697l2.758-3.15-2.759-3.152c-0.469-0.469-0.469-1.228 0-1.697s1.228-0.469 1.697 0l2.652 3.031 2.651-3.031c0.469-0.469 1.228-0.469 1.697 0s0.469 1.229 0 1.697l-2.758 3.152 2.758 3.15c0.469 0.469 0.469 1.229 0 1.698z" />
                                     </svg>
@@ -89,11 +89,11 @@
             }
             else
             {
-                if (IsShowingMask && Value != null)
+                if (IsShowingMask && SelectedItem != null)
                 {
                     <div class="blazored-typeahead__input-mask-wrapper">
                         <div class="blazored-typeahead__input-mask" @onclick="HandleClickOnMask" @onkeyup="HandleKeyUpOnMask" tabindex="0" @ref="_mask">
-                            @SelectedTemplate(Value)
+                            @SelectedTemplate(SelectedItem)
                         </div>
 
                         @if (!DisableClear)
