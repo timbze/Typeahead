@@ -230,8 +230,6 @@ namespace Blazored.Typeahead
                 case "Escape":
                     await HandleClear();
                     break;
-                default:
-                    break;
             }
 
             // You can only start searching if it's not a special key (Tab, Enter, Escape, ...)
@@ -246,7 +244,6 @@ namespace Blazored.Typeahead
         private async Task HandleKeydown(KeyboardEventArgs args)
         {
 
-            Console.WriteLine("key: " + args.Key);
             if (args.Key == "Tab")
             {
                 await ResetControl();
@@ -435,22 +432,19 @@ namespace Blazored.Typeahead
             }
 
             _editContext?.NotifyFieldChanged(_fieldIdentifier);
-
             Initialize();
         }
 
         private async Task SelectNotFoundPlaceholder()
         {
-            Debug.Assert(AddItemOnEmptyResultMethod != null);
             try
             {
-                // Potentially dangerous code
                 var item = await AddItemOnEmptyResultMethod(SearchText);
                 await SelectResult(item);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Logger.LogError(e, "Error adding new item");
             }
         }
 
